@@ -92,6 +92,31 @@ class FileManagerCLI(cmd.Cmd):
         self.conn.close()
         print("Goodbye!")
         return True
+    
+    def do_update(self, data):
+        args = data.split()
+        if len(args) != 3:
+            print("Usage: update <url> <username> <password>")
+            return
+
+        url, new_username, new_password = args
+        encrypted_password = self.cipher_suite.encrypt(new_password.encode()).decode()
+
+        conn = self.conn
+        cursor = conn.cursor()
+        
+        # Update the record where the URL matches the provided URL
+        cursor.execute(
+            """
+            UPDATE manager
+            SET username = ?, password = ?
+            WHERE url = ?
+            """,
+            (new_username, encrypted_password, url)
+        )
+        
+        conn.commit()  # Commit should be called on the connection object
+        print("Your password updated successfully!")
 
 if __name__ == '__main__':
     FileManagerCLI().cmdloop()
